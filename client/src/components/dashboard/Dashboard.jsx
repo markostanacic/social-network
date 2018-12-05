@@ -1,13 +1,22 @@
-import React, { PureComponent } from "react";
-import { Link } from "react-router-dom";
-import { PropTypes } from "prop-types";
-import { connect } from "react-redux";
-import { getCurrentProfile } from "../../actions/profileActions";
-import Spinner from "../common/Spinner";
+import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { getCurrentProfile, deleteAccount } from '../../actions/profileActions';
+import Spinner from '../common/Spinner';
+import DashboardProfileActions from './DashboardProfileActions';
+import ExperienceDetails from './details/ExperienceDetails';
+import EducationDetails from './details/EducationDetails';
 
-class Dashboard extends PureComponent {
+
+
+class Dashboard extends Component {
   componentDidMount() {
     this.props.getCurrentProfile();
+  }
+
+  onDeleteClick(e) {
+    this.props.deleteAccount();
   }
 
   render() {
@@ -19,9 +28,27 @@ class Dashboard extends PureComponent {
     if (profile === null || loading) {
       dashboardContent = <Spinner />;
     } else {
+      // Check if logged in user has profile data
       if (Object.keys(profile).length > 0) {
-        dashboardContent = <h4>Display profile</h4>;
+        dashboardContent = (
+          <div>
+            <p className="lead text-muted">
+              Welcome <Link to={`/profile/${profile.handle}`}>{user.name}</Link>
+            </p>
+            <DashboardProfileActions />
+            <ExperienceDetails experience={profile.experience} />
+            <EducationDetails education={profile.education} />
+            <div style={{ marginBottom: '60px' }} />
+            <button
+              onClick={this.onDeleteClick.bind(this)}
+              className="btn btn-danger"
+            >
+              Delete My Account
+            </button>
+          </div>
+        );
       } else {
+        // User is logged in but has no profile
         dashboardContent = (
           <div>
             <p className="lead text-muted">Welcome {user.name}</p>
@@ -51,6 +78,7 @@ class Dashboard extends PureComponent {
 
 Dashboard.propTypes = {
   getCurrentProfile: PropTypes.func.isRequired,
+  deleteAccount: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   profile: PropTypes.object.isRequired
 };
@@ -60,7 +88,6 @@ const mapStateToProps = state => ({
   auth: state.auth
 });
 
-export default connect(
-  mapStateToProps,
-  { getCurrentProfile }
-)(Dashboard);
+export default connect(mapStateToProps, { getCurrentProfile, deleteAccount })(
+  Dashboard
+);
